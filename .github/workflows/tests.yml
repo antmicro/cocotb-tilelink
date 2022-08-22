@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'stable/**'
+  pull_request:
+    branches:
+      - main
+      - 'stable/**'
+  workflow_call:
+
+jobs:
+  regresion-tests:
+    name: Regresion Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+    - name: Install cocotb and Icarus requirements
+      run: |
+        sudo apt update
+        sudo apt install -y g++ make git bison flex gperf
+    - name: Set up Icarus
+      run: |
+        git clone https://github.com/steveicarus/iverilog.git
+        cd iverilog
+        sh autoconf.sh
+        ./configure
+        make
+        sudo make install
+    - name: Install testing requirements
+      run: |
+        pip install nox
+    - name: Run tests
+      run: |
+        nox -e tests
